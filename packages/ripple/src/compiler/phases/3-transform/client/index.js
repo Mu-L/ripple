@@ -2711,12 +2711,42 @@ function transform_ts_child(node, context) {
 		if (!node.selfClosing && !node.unclosed && !has_children_props && node.children.length > 0) {
 			const is_dom_element = is_element_dom_element(node);
 			const component_scope = /** @type {ScopeInterface} */ (context.state.scopes.get(node));
+			/** @type {AST.Node[]} */
+			const non_component_children = [];
+
+			for (let i = 0; i < node.children.length; i++) {
+				const child = node.children[i];
+				if (!is_dom_element && child.type === 'Component' && child.id) {
+					const transformed_component = /** @type {AST.FunctionDeclaration} */ (
+						visit(child, {
+							...state,
+							scope: component_scope,
+							metadata: { await: false },
+						})
+					);
+					const func = b.arrow(
+						transformed_component.params,
+						transformed_component.body,
+						transformed_component.async,
+					);
+					func.metadata = { ...func.metadata, is_component: true };
+					const id = b.jsx_id(
+						/** @type {AST.Identifier} */ (child.id).name,
+						/** @type {AST.NodeWithLocation} */ (child.id),
+					);
+					id.metadata = { ...id.metadata, is_component: true };
+					attributes.push(b.jsx_attribute(id, b.jsx_expression_container(func)));
+				} else {
+					non_component_children.push(child);
+				}
+			}
 			const thunk =
-				/** @type {AST.Identifier} */ (node.id).name === 'style'
+				/** @type {AST.Identifier} */ (node.id).name === 'style' ||
+				non_component_children.length === 0
 					? null
 					: b.thunk(
 							b.block(
-								transform_body(node.children, {
+								transform_body(non_component_children, {
 									...context,
 									state: {
 										...state,
