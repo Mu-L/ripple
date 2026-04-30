@@ -1656,7 +1656,7 @@ args = ["-y", "@tsrx/mcp"]
 ChatGPT setup:
 
 ChatGPT web uses hosted MCP apps/connectors, not local stdio commands. To use
-TSRX MCP there, host the monorepo's `mcp-endpoint-website` app anywhere that can
+TSRX MCP there, host the monorepo's `website-mcp` app anywhere that can
 run a Node HTTP server, then use its `/mcp` URL when creating a custom app or
 connector from ChatGPT developer mode. Select that app from the tools menu in a
 chat. For local repository work, prefer Codex, Cursor, or Gemini CLI with the
